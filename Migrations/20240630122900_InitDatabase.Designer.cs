@@ -4,15 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using crtmgrz.Data;
+using crtmgrz;
 
 #nullable disable
 
 namespace crtmgrz.Migrations
 {
-    [DbContext(typeof(CrtMgrDb))]
-    [Migration("20240629184432_Certificate")]
-    partial class Certificate
+    [DbContext(typeof(CertificatesContext))]
+    [Migration("20240630122900_InitDatabase")]
+    partial class InitDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,7 @@ namespace crtmgrz.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.6");
 
-            modelBuilder.Entity("crtmgrz.Data.Certificate", b =>
+            modelBuilder.Entity("crtmgrz.Certificate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -54,16 +54,16 @@ namespace crtmgrz.Migrations
                     b.ToTable("Certificates");
                 });
 
-            modelBuilder.Entity("crtmgrz.Data.Certificate", b =>
+            modelBuilder.Entity("crtmgrz.Certificate", b =>
                 {
-                    b.HasOne("crtmgrz.Data.Certificate", "Parent")
+                    b.HasOne("crtmgrz.Certificate", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("Pid");
 
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("crtmgrz.Data.Certificate", b =>
+            modelBuilder.Entity("crtmgrz.Certificate", b =>
                 {
                     b.Navigation("Children");
                 });
