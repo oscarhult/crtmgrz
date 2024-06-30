@@ -136,7 +136,7 @@
 
     private List<ListCertificateResponseItem>? Certificates;
 
-    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, bool Children, string NotBefore, string NotAfter);
+    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
 
     private class CertificateModel
     {
@@ -170,7 +170,6 @@
     protected async Task<List<ListCertificateResponseItem>> LoadCertificates(Guid? id)
     {
         return await db.Certificates
-            .Include(x => x.Children)
             .Where(x => x.Pid == id)
             .OrderBy(x => x.Name)
             .Select(x => new ListCertificateResponseItem
@@ -179,7 +178,6 @@
                 x.Pid,
                 x.Name,
                 x.Authoritative,
-                x.Children.Any(),
                 x.NotBefore,
                 x.NotAfter
             ))
