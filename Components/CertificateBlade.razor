@@ -17,11 +17,14 @@
             </span>
         </a>
         <ul class="dropdown-menu shadow">
-            <li>
-                <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
-                    Create Certificate
-                </a>
-            </li>
+            @if (Parent == null || Parent.Authoritative)
+            {
+                <li>
+                    <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
+                        Create Certificate
+                    </a>
+                </li>
+            }
             @if (Parent != null)
             {
                 <li>
