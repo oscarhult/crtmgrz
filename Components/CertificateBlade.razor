@@ -90,23 +90,23 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" role="switch" id="authoritative" @bind="Certificate.Authoritative">
+                            <input class="form-check-input" type="checkbox" role="switch" id="authoritative" @bind="NewCertificate.Authoritative">
                             <label class="form-check-label" for="authoritative">Authoritative</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="name" @bind="Certificate.Name">
+                            <input type="text" class="form-control" id="name" @bind="NewCertificate.Name">
                             <label for="name">Name</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="years" @bind="Certificate.Years">
+                            <input type="number" class="form-control" id="years" @bind="NewCertificate.Years">
                             <label for="years">Years</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <textarea class="form-control" id="domains" style="height: 100px" @bind="Certificate.Domains"></textarea>
+                            <textarea class="form-control" id="domains" style="height: 100px" @bind="NewCertificate.Domains"></textarea>
                             <label for="domains">Domains</label>
                         </div>
                         <div class="form-floating">
-                            <textarea class="form-control" id="ips" style="height: 100px" @bind="Certificate.IPs"></textarea>
+                            <textarea class="form-control" id="ips" style="height: 100px" @bind="NewCertificate.IPs"></textarea>
                             <label for="ips">IPs</label>
                         </div>
                     </form>
@@ -131,13 +131,12 @@
     public ListCertificateResponseItem? Parent { get; set; }
 
     private ListCertificateResponseItem? Selected { get; set; }
-
+    private List<ListCertificateResponseItem>? Certificates;
+    private CertificateModel NewCertificate { get; set; } = new CertificateModel();
     private bool ShowModal { get; set; }
 
-    private List<ListCertificateResponseItem>? Certificates;
-
+    public enum ExportFormat { None, Pfx, Cer }
     public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
-
     private class CertificateModel
     {
         public bool Authoritative { get; set; }
@@ -146,10 +145,6 @@
         public string Domains { get; set; } = string.Empty;
         public string IPs { get; set; } = string.Empty;
     }
-
-    private CertificateModel Certificate { get; set; } = new CertificateModel();
-
-    public enum ExportFormat { None, Pfx, Cer }
 
     protected override async Task OnInitializedAsync()
     {
@@ -220,7 +215,7 @@
         StateHasChanged();
         await Task.Yield();
 
-        using var rsa = RSA.Create(Certificate.Authoritative ? 4096 : 2048);
+        using var rsa = RSA.Create(NewCertificate.Authoritative ? 4096 : 2048);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -230,11 +225,11 @@
             .AddMinutes(-now.Minute)
             .AddSeconds(-now.Second);
 
-        var notAfter = notBefore.AddYears(Certificate.Years).AddSeconds(-1);
+        var notAfter = notBefore.AddYears(NewCertificate.Years).AddSeconds(-1);
 
         var nameBuilder = new X500DistinguishedNameBuilder();
-        nameBuilder.AddOrganizationName(Certificate.Name);
-        nameBuilder.AddCommonName(Certificate.Name);
+        nameBuilder.AddOrganizationName(NewCertificate.Name);
+        nameBuilder.AddCommonName(NewCertificate.Name);
         var name = nameBuilder.Build();
 
         var certificateRequest = new CertificateRequest(
@@ -257,7 +252,7 @@
 
         X509Certificate2 cert;
 
-        if (Certificate.Authoritative)
+        if (NewCertificate.Authoritative)
         {
             certificateRequest.CertificateExtensions.Add(
                 X509BasicConstraintsExtension.CreateForCertificateAuthority()
@@ -297,17 +292,17 @@
 
             var subjectBuilder = new SubjectAlternativeNameBuilder();
 
-            if (!string.IsNullOrEmpty(Certificate.Domains))
+            if (!string.IsNullOrEmpty(NewCertificate.Domains))
             {
-                foreach (var domain in Certificate.Domains.Split('\n'))
+                foreach (var domain in NewCertificate.Domains.Split('\n'))
                 {
                     subjectBuilder.AddDnsName(domain);
                 }
             }
 
-            if (!string.IsNullOrEmpty(Certificate.IPs))
+            if (!string.IsNullOrEmpty(NewCertificate.IPs))
             {
-                foreach (var ip in Certificate.IPs.Split('\n'))
+                foreach (var ip in NewCertificate.IPs.Split('\n'))
                 {
                     subjectBuilder.AddIpAddress(IPAddress.Parse(ip));
                 }
@@ -327,8 +322,8 @@
             {
                 Id = Guid.NewGuid(),
                 Pid = Parent?.Id,
-                Authoritative = Certificate.Authoritative,
-                Name = Certificate.Name,
+                Authoritative = NewCertificate.Authoritative,
+                Name = NewCertificate.Name,
                 PrivateKeyPem = rsa.ExportRSAPrivateKeyPem(),
                 CertificatePem = cert.ExportCertificatePem(),
                 NotBefore = notBefore.UtcDateTime.ToString("yyyy-MM-dd"),
