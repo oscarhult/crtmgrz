@@ -162,9 +162,16 @@
         Selected = null;
     }
 
-    private void OnCertificateClick(ListCertificateResponseItem id)
+    private void OnCertificateClick(ListCertificateResponseItem selected)
     {
-        Selected = id;
+        if (Selected == selected)
+        {
+            Selected = null;
+        }
+        else
+        {
+            Selected = selected;
+        }
     }
 
     protected async Task<List<ListCertificateResponseItem>> LoadCertificates(Guid? id)
