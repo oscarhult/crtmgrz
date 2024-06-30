@@ -73,7 +73,6 @@
                 <p class="card-text">Is Authoritative: @Parent.Authoritative</p>
                 <p class="card-text">Valid From: @Parent.NotBefore</p>
                 <p class="card-text">Valid To: @Parent.NotAfter</p>
-                <p class="card-text">Has Children: @Parent.Children</p>
             </div>
         </div>
     }
@@ -213,10 +212,12 @@
     {
         Certificates = null;
         ShowModal = false;
+        StateHasChanged();
+        await Task.Yield();
 
         using var rsa = RSA.Create(Certificate.Authoritative ? 4096 : 2048);
 
-        var now = DateTimeOffset.Now;
+        var now = DateTimeOffset.UtcNow;
 
         var notBefore = now
             .AddDays(-(now.Day - 1))
@@ -325,8 +326,8 @@
                 Name = Certificate.Name,
                 PrivateKeyPem = rsa.ExportRSAPrivateKeyPem(),
                 CertificatePem = cert.ExportCertificatePem(),
-                NotBefore = notBefore.LocalDateTime.ToShortDateString(),
-                NotAfter = notAfter.LocalDateTime.ToShortDateString(),
+                NotBefore = notBefore.UtcDateTime.ToString("yyyy-MM-dd"),
+                NotAfter = notAfter.UtcDateTime.ToString("yyyy-MM-dd"),
             };
 
         cert.Dispose();
