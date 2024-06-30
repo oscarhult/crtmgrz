@@ -51,9 +51,6 @@ namespace crtmgrz.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("Pid");
 
                     b.ToTable("Certificates");

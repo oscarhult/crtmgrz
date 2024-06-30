@@ -17,7 +17,6 @@ public class CertificatesContext : DbContext
         builder.Entity<Certificate>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => x.Name).IsUnique();
         });
     }
 }
@@ -31,7 +30,6 @@ public class Certificate
     public required string Name { get; init; }
     public required string PrivateKeyPem { get; init; }
     public required string CertificatePem { get; init; }
-
     public required string NotBefore { get; init; }
     public required string NotAfter { get; init; }
 

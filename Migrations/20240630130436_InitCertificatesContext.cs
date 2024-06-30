@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace crtmgrz.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDatabase : Migration
+    public partial class InitCertificatesContext : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,7 +20,9 @@ namespace crtmgrz.Migrations
                     Authoritative = table.Column<bool>(type: "INTEGER", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     PrivateKeyPem = table.Column<string>(type: "TEXT", nullable: false),
-                    CertificatePem = table.Column<string>(type: "TEXT", nullable: false)
+                    CertificatePem = table.Column<string>(type: "TEXT", nullable: false),
+                    NotBefore = table.Column<string>(type: "TEXT", nullable: false),
+                    NotAfter = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,12 +33,6 @@ namespace crtmgrz.Migrations
                         principalTable: "Certificates",
                         principalColumn: "Id");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Certificates_Name",
-                table: "Certificates",
-                column: "Name",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Certificates_Pid",

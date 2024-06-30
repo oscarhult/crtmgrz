@@ -11,8 +11,8 @@ using crtmgrz;
 namespace crtmgrz.Migrations
 {
     [DbContext(typeof(CertificatesContext))]
-    [Migration("20240630122900_InitDatabase")]
-    partial class InitDatabase
+    [Migration("20240630130436_InitCertificatesContext")]
+    partial class InitCertificatesContext
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,6 +37,14 @@ namespace crtmgrz.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NotAfter")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NotBefore")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("Pid")
                         .HasColumnType("TEXT");
 
@@ -45,9 +53,6 @@ namespace crtmgrz.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.HasIndex("Pid");
 
