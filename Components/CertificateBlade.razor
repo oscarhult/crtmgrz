@@ -1,7 +1,7 @@
 ﻿@inject CertificatesContext db
 @inject IJSRuntime JS
 
-<div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="min-width: 280px;">
+<div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="min-width: 280px;">
     <div class="dropdown">
         <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <span class="fs-5">
@@ -12,11 +12,11 @@
                 }
                 else
                 {
-                    @Parent.Name
+                    <span>@Parent.Name</span>
                 }
             </span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+        <ul class="dropdown-menu shadow">
             <li>
                 <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
                     Create Certificate
@@ -63,6 +63,17 @@
             }
         }
     </ul>
+    @if (Parent != null)
+    {
+        <div class="card border-secondary mt-3" style="max-width: 18rem;">
+            <div class="card-body text-secondary">
+                <p class="card-text">Is Authoritative: @Parent.Authoritative</p>
+                <p class="card-text">Valid From: @Parent.NotBefore</p>
+                <p class="card-text">Valid To: @Parent.NotAfter</p>
+                <p class="card-text">Has Children: @Parent.Children</p>
+            </div>
+        </div>
+    }
 </div>
 
 @if (ShowModal)
@@ -109,6 +120,7 @@
 
 @if (Selected != null)
 {
+    <div class="b-example-divider b-example-vr"></div>
     <CertificateBlade Parent="@Selected" />
 }
 
@@ -122,7 +134,7 @@
 
     private List<ListCertificateResponseItem>? Certificates;
 
-    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, bool Children);
+    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, bool Children, string NotBefore, string NotAfter);
 
     private class CertificateModel
     {
@@ -165,7 +177,9 @@
                 x.Pid,
                 x.Name,
                 x.Authoritative,
-                x.Children.Any()
+                x.Children.Any(),
+                x.NotBefore,
+                x.NotAfter
             ))
             .ToListAsync();
     }
@@ -201,11 +215,11 @@
 
         var now = DateTimeOffset.Now;
 
-        var notBefore = now.AddDays(-(now.Day - 1))
+        var notBefore = now
+            .AddDays(-(now.Day - 1))
             .AddHours(-now.Hour)
             .AddMinutes(-now.Minute)
-            .AddSeconds(-now.Second)
-            .AddMonths(-1);
+            .AddSeconds(-now.Second);
 
         var notAfter = notBefore.AddYears(Certificate.Years).AddSeconds(-1);
 
@@ -308,6 +322,8 @@
                 Name = Certificate.Name,
                 PrivateKeyPem = rsa.ExportRSAPrivateKeyPem(),
                 CertificatePem = cert.ExportCertificatePem(),
+                NotBefore = notBefore.LocalDateTime.ToShortDateString(),
+                NotAfter = notAfter.LocalDateTime.ToShortDateString(),
             };
 
         cert.Dispose();

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using crtmgrz;
 
@@ -10,9 +11,11 @@ using crtmgrz;
 namespace crtmgrz.Migrations
 {
     [DbContext(typeof(CertificatesContext))]
-    partial class CertificatesContextModelSnapshot : ModelSnapshot
+    [Migration("20240630123255_CertificatesDates")]
+    partial class CertificatesDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.6");

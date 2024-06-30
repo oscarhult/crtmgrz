@@ -32,6 +32,9 @@ public class Certificate
     public required string PrivateKeyPem { get; init; }
     public required string CertificatePem { get; init; }
 
+    public required string NotBefore { get; init; }
+    public required string NotAfter { get; init; }
+
     [ForeignKey(nameof(Pid))]
     public Certificate Parent { get; init; }
 
