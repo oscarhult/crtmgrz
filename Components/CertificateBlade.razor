@@ -102,11 +102,11 @@
                             <label for="years">Years</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <textarea class="form-control" id="domains" style="height: 100px" @bind="NewCertificate.Domains"></textarea>
+                            <textarea class="form-control" id="domains" style="height: 100px" @bind="NewCertificate.Domains" disabled="@NewCertificate.Authoritative"></textarea>
                             <label for="domains">Domains</label>
                         </div>
                         <div class="form-floating">
-                            <textarea class="form-control" id="ips" style="height: 100px" @bind="NewCertificate.IPs"></textarea>
+                            <textarea class="form-control" id="ips" style="height: 100px" @bind="NewCertificate.IPs" disabled="@NewCertificate.Authoritative"></textarea>
                             <label for="ips">IPs</label>
                         </div>
                     </form>
@@ -137,6 +137,7 @@
 
     public enum ExportFormat { None, Pfx, Cer }
     public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
+
     private class CertificateModel
     {
         public bool Authoritative { get; set; }
@@ -148,6 +149,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NewCertificate.Authoritative = Parent == null;
         Certificates = await LoadCertificates(Parent?.Id);
     }
 
@@ -275,6 +277,29 @@
 
         if (Parent == null)
         {
+            if (!NewCertificate.Authoritative)
+            {
+                var subjectBuilder = new SubjectAlternativeNameBuilder();
+
+                if (!string.IsNullOrEmpty(NewCertificate.Domains))
+                {
+                    foreach (var domain in NewCertificate.Domains.Split('\n'))
+                    {
+                        subjectBuilder.AddDnsName(domain);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(NewCertificate.IPs))
+                {
+                    foreach (var ip in NewCertificate.IPs.Split('\n'))
+                    {
+                        subjectBuilder.AddIpAddress(IPAddress.Parse(ip));
+                    }
+                }
+
+                certificateRequest.CertificateExtensions.Add(subjectBuilder.Build());
+            }
+
             cert = certificateRequest.CreateSelfSigned(notBefore, notAfter);
         }
         else
@@ -290,25 +315,28 @@
                 X509AuthorityKeyIdentifierExtension.CreateFromCertificate(caCertWithKey, true, true)
             );
 
-            var subjectBuilder = new SubjectAlternativeNameBuilder();
-
-            if (!string.IsNullOrEmpty(NewCertificate.Domains))
+            if (!NewCertificate.Authoritative)
             {
-                foreach (var domain in NewCertificate.Domains.Split('\n'))
-                {
-                    subjectBuilder.AddDnsName(domain);
-                }
-            }
+                var subjectBuilder = new SubjectAlternativeNameBuilder();
 
-            if (!string.IsNullOrEmpty(NewCertificate.IPs))
-            {
-                foreach (var ip in NewCertificate.IPs.Split('\n'))
+                if (!string.IsNullOrEmpty(NewCertificate.Domains))
                 {
-                    subjectBuilder.AddIpAddress(IPAddress.Parse(ip));
+                    foreach (var domain in NewCertificate.Domains.Split('\n'))
+                    {
+                        subjectBuilder.AddDnsName(domain);
+                    }
                 }
-            }
 
-            certificateRequest.CertificateExtensions.Add(subjectBuilder.Build());
+                if (!string.IsNullOrEmpty(NewCertificate.IPs))
+                {
+                    foreach (var ip in NewCertificate.IPs.Split('\n'))
+                    {
+                        subjectBuilder.AddIpAddress(IPAddress.Parse(ip));
+                    }
+                }
+
+                certificateRequest.CertificateExtensions.Add(subjectBuilder.Build());
+            }
 
             cert = certificateRequest.Create(
                 caCertWithKey,
