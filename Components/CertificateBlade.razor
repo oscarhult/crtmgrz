@@ -1,0 +1,339 @@
+﻿@inject CrtMgrDb db
+@inject IJSRuntime JS
+
+<div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="width: 280px;">
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="fs-5">
+                @if (Parent == null)
+                {
+                    <i class="bi bi-shield-lock-fill me-1"></i>
+                    <span>CrtMgr</span>
+                }
+                else
+                {
+                    @Parent.Name
+                }
+            </span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+            <li>
+                <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
+                    Create Certificate
+                </a>
+            </li>
+            @if (Parent != null)
+            {
+                <li>
+                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
+                        Download (pfx)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
+                        Download (cer)
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        @if (Certificates == null)
+        {
+            <li>
+                <a class="nav-link text-white">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Loading...
+                </a>
+            </li>
+        }
+        else
+        {
+            @foreach (var certificate in Certificates)
+            {
+                <li key="@certificate.Id">
+                    <a href="#" class="nav-link @(Selected == certificate ? "active" : "text-white")" @onclick="@(() => OnCertificateClick(certificate))">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        @certificate.Name
+                    </a>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+@if (ShowModal)
+{
+    <div class="modal show" tabindex="-1" style="display:block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Certificate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowModal = false; })"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="authoritative" @bind="Certificate.Authoritative">
+                            <label class="form-check-label" for="authoritative">Authoritative</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" @bind="Certificate.Name">
+                            <label for="name">Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" id="years" @bind="Certificate.Years">
+                            <label for="years">Years</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="domains" style="height: 100px" @bind="Certificate.Domains"></textarea>
+                            <label for="domains">Domains</label>
+                        </div>
+                        <div class="form-floating">
+                            <textarea class="form-control" id="ips" style="height: 100px" @bind="Certificate.IPs"></textarea>
+                            <label for="ips">IPs</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="CreateCertificate">Create Certificate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (Selected != null)
+{
+    <CertificateBlade Parent="@Selected" />
+}
+
+@code {
+    [Parameter]
+    public ListCertificateResponseItem? Parent { get; set; }
+
+    private ListCertificateResponseItem? Selected { get; set; }
+
+    private bool ShowModal { get; set; }
+
+    private List<ListCertificateResponseItem>? Certificates;
+
+    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, bool Children);
+
+    private class CertificateModel
+    {
+        public bool Authoritative { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Years { get; set; }
+        public string Domains { get; set; } = string.Empty;
+        public string IPs { get; set; } = string.Empty;
+    }
+
+    private CertificateModel Certificate { get; set; } = new CertificateModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Certificates = await LoadCertificates(Parent?.Id);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Certificates = await LoadCertificates(Parent?.Id);
+        Selected = null;
+    }
+
+    private void OnCertificateClick(ListCertificateResponseItem id)
+    {
+        Selected = id;
+    }
+
+    public enum ExportFormat
+    {
+        None,
+        Pfx,
+        Cer,
+    }
+
+    protected async Task DownloadCertificate(ExportFormat format)
+    {
+        var certificate = await db.Certificates.SingleAsync(x => x.Id == Parent.Id);
+
+        using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
+        using var key = RSA.Create();
+        key.ImportFromPem(certificate.PrivateKeyPem);
+        using var certWithKey = cert.CopyWithPrivateKey(key);
+
+        switch (format)
+        {
+            case ExportFormat.Pfx:
+                using (var stream = new MemoryStream(certWithKey.Export(X509ContentType.Pfx)))
+                using (var streamRef = new DotNetStreamReference(stream))
+                {
+                    await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.pfx", streamRef);
+                }
+                break;
+
+            case ExportFormat.Cer:
+                using (var stream = new MemoryStream(certWithKey.Export(X509ContentType.Cert)))
+                using (var streamRef = new DotNetStreamReference(stream))
+                {
+                    await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.cer", streamRef);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    protected async Task CreateCertificate()
+    {
+        Certificates = null;
+        ShowModal = false;
+
+        using var rsa = RSA.Create(Certificate.Authoritative ? 4096 : 2048);
+
+        var now = DateTimeOffset.Now;
+
+        var notBefore = now.AddDays(-(now.Day - 1))
+            .AddHours(-now.Hour)
+            .AddMinutes(-now.Minute)
+            .AddSeconds(-now.Second)
+            .AddMonths(-1);
+
+        var notAfter = notBefore.AddYears(Certificate.Years).AddSeconds(-1);
+
+        var nameBuilder = new X500DistinguishedNameBuilder();
+        nameBuilder.AddOrganizationName(Certificate.Name);
+        nameBuilder.AddCommonName(Certificate.Name);
+        var name = nameBuilder.Build();
+
+        var certificateRequest = new CertificateRequest(
+            name,
+            rsa,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1
+        );
+
+        certificateRequest.CertificateExtensions.Add(
+            new X509EnhancedKeyUsageExtension(
+                new OidCollection
+                {
+                    new Oid("1.3.6.1.5.5.7.3.1"),
+                    new Oid("1.3.6.1.5.5.7.3.2"),
+                },
+                false
+            )
+        );
+
+        certificateRequest.CertificateExtensions.Add(
+            new X509SubjectKeyIdentifierExtension(certificateRequest.PublicKey, false)
+        );
+
+        X509Certificate2 cert;
+
+        if (Certificate.Authoritative)
+        {
+            certificateRequest.CertificateExtensions.Add(
+                X509BasicConstraintsExtension.CreateForCertificateAuthority()
+            );
+
+            certificateRequest.CertificateExtensions.Add(
+                new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign, false)
+            );
+        }
+        else
+        {
+            certificateRequest.CertificateExtensions.Add(
+                X509BasicConstraintsExtension.CreateForEndEntity()
+            );
+
+            certificateRequest.CertificateExtensions.Add(
+                new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, false)
+            );
+        }
+
+        if (Parent == null)
+        {
+            cert = certificateRequest.CreateSelfSigned(notBefore, notAfter);
+        }
+        else
+        {
+            var parent = await db.Certificates.SingleAsync(x => x.Id == Parent.Id);
+
+            using var caCert = X509Certificate2.CreateFromPem(parent.CertificatePem);
+            using var caKey = RSA.Create();
+            caKey.ImportFromPem(parent.PrivateKeyPem);
+            using var caCertWithKey = caCert.CopyWithPrivateKey(caKey);
+
+            certificateRequest.CertificateExtensions.Add(
+                X509AuthorityKeyIdentifierExtension.CreateFromCertificate(caCertWithKey, true, true)
+            );
+
+            var subjectBuilder = new SubjectAlternativeNameBuilder();
+
+            if (!string.IsNullOrEmpty(Certificate.Domains))
+            {
+                foreach (var domain in Certificate.Domains.Split('\n'))
+            {
+                    subjectBuilder.AddDnsName(domain);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Certificate.IPs))
+            {
+                foreach (var ip in Certificate.IPs.Split('\n'))
+                {
+                    subjectBuilder.AddIpAddress(IPAddress.Parse(ip));
+                }
+            }
+
+            certificateRequest.CertificateExtensions.Add(subjectBuilder.Build());
+
+            cert = certificateRequest.Create(
+                caCertWithKey,
+                notBefore,
+                notAfter,
+                RandomNumberGenerator.GetBytes(8)
+            );
+        }
+
+        var certificate = new Certificate
+            {
+                Id = Guid.NewGuid(),
+                Pid = Parent?.Id,
+                Authoritative = Certificate.Authoritative,
+                Name = Certificate.Name,
+                PrivateKeyPem = rsa.ExportRSAPrivateKeyPem(),
+                CertificatePem = cert.ExportCertificatePem(),
+            };
+
+        cert.Dispose();
+
+        await db.Certificates.AddAsync(certificate);
+        await db.SaveChangesAsync();
+
+        Certificates = await LoadCertificates(Parent?.Id);
+    }
+
+    protected async Task<List<ListCertificateResponseItem>> LoadCertificates(Guid? id)
+    {
+        return await db.Certificates
+            .Include(x => x.Children)
+            .Where(x => x.Pid == id)
+            .OrderBy(x => x.Name)
+            .Select(x => new ListCertificateResponseItem
+            (
+                x.Id,
+                x.Pid,
+                x.Name,
+                x.Authoritative,
+                x.Children.Any()
+            ))
+            .ToListAsync();
+    }
+}

@@ -1,0 +1,11 @@
+﻿ul.nav {
+    row-gap: 0.25rem;
+}
+
+a.nav-link {
+    transition: none;
+}
+
+    a.nav-link.text-white:hover {
+        background-color: var(--bs-nav-pills-link-active-bg);
+    }
