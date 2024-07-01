@@ -142,7 +142,7 @@
     {
         public bool Authoritative { get; set; }
         public string Name { get; set; } = string.Empty;
-        public int Years { get; set; }
+        public int Years { get; set; } = 1;
         public string Domains { get; set; } = string.Empty;
         public string IPs { get; set; } = string.Empty;
     }
@@ -364,5 +364,6 @@
         await db.SaveChangesAsync();
 
         Certificates = await LoadCertificates(Parent?.Id);
+        NewCertificate = new() { Authoritative = Parent == null };
     }
 }
