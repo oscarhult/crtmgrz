@@ -51,6 +51,12 @@
                     </a>
                 </li>
                 <li>
+                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Chain); })">
+                        <i class="bi bi-download me-2"></i>
+                        Download Chain (.pem)
+                    </a>
+                </li>
+                <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
                         <i class="bi bi-download me-2"></i>
                         Download Private Key
@@ -155,7 +161,7 @@
     private CertificateModel NewCertificate { get; set; } = new CertificateModel();
     private bool ShowModal { get; set; }
 
-    public enum ExportFormat { None, Pfx, Cer, Pem, PrivateKey }
+    public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
     public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
 
     private class CertificateModel
@@ -238,6 +244,25 @@
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.CertificatePem));
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.pem", streamRef);
+        }
+        else if (format == ExportFormat.Chain)
+        {
+            var chain = new List<Certificate> { certificate };
+            var pid = certificate.Pid;
+
+            while (pid.HasValue)
+            {
+                var parent = await db.Certificates.SingleOrDefaultAsync(x => x.Id == pid.Value);
+                pid = parent?.Pid;
+                if (parent != null)
+                {
+                    chain.Add(parent);
+                }
+            }
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\n', chain.Select(x => x.CertificatePem))));
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.chain", streamRef);
         }
         else if (format == ExportFormat.PrivateKey)
         {
