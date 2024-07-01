@@ -5,17 +5,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-var dbPath = isDocker ? "/app/data/db.sqlite" : "db.sqlite";
-
-if (isDocker)
-{
-    var dbDirectory = Path.GetDirectoryName(dbPath);
-
-    if (!Directory.Exists(dbDirectory))
-    {
-        Directory.CreateDirectory(dbDirectory);
-    }
-}
+var dbPath = isDocker && builder.Environment.IsProduction() ? "/app/data/db.sqlite" : "db.sqlite";
 
 builder.Services.AddDbContext<CertificatesContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

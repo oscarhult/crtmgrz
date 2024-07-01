@@ -6,6 +6,9 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+# Ensure the /app/data directory exists and is writable
+RUN mkdir -p /app/data && chown -R app:app /app/data
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
