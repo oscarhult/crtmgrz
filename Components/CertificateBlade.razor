@@ -29,12 +29,22 @@
             {
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
-                        Download (pfx)
+                        Download Certificate (.pfx)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
-                        Download (cer)
+                        Download Certificate (.cer)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pem); })">
+                        Download Certificate (.pem)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
+                        Download Private Key
                     </a>
                 </li>
             }
@@ -122,7 +132,7 @@
 
 @if (Selected != null)
 {
-    <div class="b-example-divider b-example-vr"></div>
+    <div class="divider"></div>
     <CertificateBlade Parent="@Selected" />
 }
 
@@ -136,7 +146,7 @@
     private CertificateModel NewCertificate { get; set; } = new CertificateModel();
     private bool ShowModal { get; set; }
 
-    public enum ExportFormat { None, Pfx, Cer }
+    public enum ExportFormat { None, Pfx, Cer, Pem, PrivateKey }
     public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
 
     private class CertificateModel
@@ -196,10 +206,10 @@
     protected async Task DownloadCertificate(ExportFormat format)
     {
         var certificate = await db.Certificates.SingleAsync(x => x.Id == Parent.Id);
-        using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
 
         if (format == ExportFormat.Pfx)
         {
+            using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
             using var key = RSA.Create();
             key.ImportFromPem(certificate.PrivateKeyPem);
             using var certWithKey = cert.CopyWithPrivateKey(key);
@@ -209,9 +219,22 @@
         }
         else if (format == ExportFormat.Cer)
         {
+            using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
             using var stream = new MemoryStream(cert.Export(X509ContentType.Cert));
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.cer", streamRef);
+        }
+        else if(format == ExportFormat.Pem)
+        {
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.CertificatePem));
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.pem", streamRef);
+        }
+        else if (format == ExportFormat.PrivateKey)
+        {
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.PrivateKeyPem));
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.key", streamRef);
         }
     }
 
@@ -359,8 +382,8 @@
                 Name = NewCertificate.Name,
                 PrivateKeyPem = rsa.ExportRSAPrivateKeyPem(),
                 CertificatePem = cert.ExportCertificatePem(),
-                NotBefore = notBefore.UtcDateTime.ToString("yyyy-MM-dd"),
-                NotAfter = notAfter.UtcDateTime.ToString("yyyy-MM-dd"),
+                NotBefore = notBefore.ToString("yyyy-MM-dd"),
+                NotAfter = notAfter.ToString("yyyy-MM-dd"),
             };
 
         cert.Dispose();
