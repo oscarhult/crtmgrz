@@ -4,7 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<CertificatesContext>(c => c.UseSqlite($"Data Source=db.sqlite"));
+var dbPath = "./data";
+
+if (!Directory.Exists(dbPath))
+{
+    Directory.CreateDirectory(dbPath);
+}
+
+builder.Services.AddDbContext<CertificatesContext>(options => options.UseSqlite($"Data Source={dbPath}/db.sqlite"));
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
