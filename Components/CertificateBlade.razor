@@ -21,29 +21,38 @@
             {
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
+                        <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
                     </a>
                 </li>
+            }
+            @if (Parent != null && Parent.Authoritative)
+            {
+                <li><hr class="dropdown-divider"></li>
             }
             @if (Parent != null)
             {
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
+                        <i class="bi bi-download me-2"></i>
                         Download Certificate (.pfx)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
+                        <i class="bi bi-download me-2"></i>
                         Download Certificate (.cer)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pem); })">
+                        <i class="bi bi-download me-2"></i>
                         Download Certificate (.pem)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
+                        <i class="bi bi-download me-2"></i>
                         Download Private Key
                     </a>
                 </li>
