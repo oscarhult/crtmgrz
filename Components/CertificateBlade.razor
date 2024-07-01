@@ -129,6 +129,7 @@
 @code {
     [Parameter]
     public ListCertificateResponseItem? Parent { get; set; }
+    private ListCertificateResponseItem? PrevParent { get; set; }
 
     private ListCertificateResponseItem? Selected { get; set; }
     private List<ListCertificateResponseItem>? Certificates;
@@ -155,8 +156,12 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        Certificates = await LoadCertificates(Parent?.Id);
-        Selected = null;
+        if (PrevParent != Parent)
+        {
+            PrevParent = Parent;
+            Certificates = await LoadCertificates(Parent?.Id);
+            Selected = null;
+        }
     }
 
     private void OnCertificateClick(ListCertificateResponseItem selected)
