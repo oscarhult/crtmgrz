@@ -20,7 +20,7 @@
             @if (Parent == null || Parent.Authoritative)
             {
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(() => { ShowModal = true; })">
+                    <a class="dropdown-item text-success" href="#" @onclick="@(() => { ShowModal = true; })">
                         <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
                     </a>
@@ -118,8 +118,11 @@
     <div class="modal show" tabindex="-1" style="display:block;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Certificate</h5>
+                <div class="modal-header text-bg-success">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Create Certificate
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowModal = false; })"></button>
                 </div>
                 <div class="modal-body">
@@ -147,7 +150,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @onclick="CreateCertificate">Create Certificate</button>
+                    <button type="button" class="btn btn-success" @onclick="CreateCertificate">Create Certificate</button>
                 </div>
             </div>
         </div>
@@ -160,8 +163,11 @@
     <div class="modal show" tabindex="-1" style="display:block;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Delete Certificate</h5>
+                <div class="modal-header text-bg-danger">
+                    <h5 class="modal-title">
+                        <i class="bi bi-trash me-2"></i>
+                        Delete Certificate
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowDeleteModal = false; })"></button>
                 </div>
                 <div class="modal-body">
