@@ -191,21 +191,26 @@
 
 @code {
     [Parameter]
-    public ListCertificateResponseItem? Parent { get; set; }
-
-    [Parameter]
     public EventCallback OnChildDeleted { get; set; }
 
-    private ListCertificateResponseItem? PrevParent { get; set; }
+    [Parameter]
+    public CertificateResponse? Parent { get; set; }
 
-    private ListCertificateResponseItem? Selected { get; set; }
-    private List<ListCertificateResponseItem>? Certificates;
-    private CertificateModel NewCertificate { get; set; } = new CertificateModel();
+    private CertificateResponse? PrevParent { get; set; }
+    
+    private CertificateResponse? Selected { get; set; }
+    
+    private List<CertificateResponse>? Certificates;
+    
+    public record CertificateResponse(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
+
     private bool ShowModal { get; set; }
+    
     private bool ShowDeleteModal { get; set; }
 
     public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
-    public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
+
+    private CertificateModel NewCertificate { get; set; } = new CertificateModel();
 
     private class CertificateModel
     {
@@ -238,7 +243,7 @@
         Selected = null;
     }
 
-    private void OnCertificateClick(ListCertificateResponseItem selected)
+    private void OnCertificateClick(CertificateResponse selected)
     {
         if (Selected == selected)
         {
@@ -250,12 +255,12 @@
         }
     }
 
-    protected async Task<List<ListCertificateResponseItem>> LoadCertificates(Guid? id)
+    protected async Task<List<CertificateResponse>> LoadCertificates(Guid? id)
     {
         return await db.Certificates
             .Where(x => x.Pid == id)
             .OrderBy(x => x.Name)
-            .Select(x => new ListCertificateResponseItem
+            .Select(x => new CertificateResponse
             (
                 x.Id,
                 x.Pid,
