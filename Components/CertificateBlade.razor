@@ -63,6 +63,16 @@
                     </a>
                 </li>
             }
+            @if (Parent != null)
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item text-danger" href="#" @onclick="@(() => { ShowDeleteModal = true; })">
+                        <i class="bi bi-trash me-2"></i>
+                        Delete Certificate
+                    </a>
+                </li>
+            }
         </ul>
     </div>
     <hr>
@@ -145,21 +155,54 @@
     <div class="modal-backdrop fade show"></div>
 }
 
+@if (ShowDeleteModal)
+{
+    <div class="modal show" tabindex="-1" style="display:block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Certificate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowDeleteModal = false; })"></button>
+                </div>
+                <div class="modal-body">
+                    @if (Parent.Authoritative)
+                    {
+                        <p>Are you sure you want to delete <strong>@Parent.Name</strong> and all its related certificates?</p>
+                    }
+                    else
+                    {
+                        <p>Are you sure you want to delete <strong>@Parent.Name</strong>?</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="DeleteCertificate">Delete Certificate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
 @if (Selected != null)
 {
-    <div class="divider"></div>
-    <CertificateBlade Parent="@Selected" />
+    <div class="blade-divider"></div>
+    <CertificateBlade Parent="@Selected" OnChildDeleted="OnChildDeletedAsync" />
 }
 
 @code {
     [Parameter]
     public ListCertificateResponseItem? Parent { get; set; }
+
+    [Parameter]
+    public EventCallback OnChildDeleted { get; set; }
+
     private ListCertificateResponseItem? PrevParent { get; set; }
 
     private ListCertificateResponseItem? Selected { get; set; }
     private List<ListCertificateResponseItem>? Certificates;
     private CertificateModel NewCertificate { get; set; } = new CertificateModel();
     private bool ShowModal { get; set; }
+    private bool ShowDeleteModal { get; set; }
 
     public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
     public record ListCertificateResponseItem(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
@@ -187,6 +230,14 @@
             Certificates = await LoadCertificates(Parent?.Id);
             Selected = null;
         }
+    }
+
+    private async Task OnChildDeletedAsync()
+    {
+        Selected = null;
+        Certificates = await LoadCertificates(Parent?.Id);
+        // StateHasChanged();
+        await Task.CompletedTask;
     }
 
     private void OnCertificateClick(ListCertificateResponseItem selected)
@@ -269,6 +320,45 @@
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.PrivateKeyPem));
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.key", streamRef);
+        }
+    }
+
+    protected async Task DeleteCertificate()
+    {
+        Certificates = null;
+        ShowDeleteModal = false;
+        StateHasChanged();
+        await Task.Yield();
+
+        var certificate = await db.Certificates.Include(x => x.Children).SingleAsync(x => x.Id == Parent.Id);
+        db.Certificates.Remove(certificate);
+
+        await foreach (var child in GetCertificates(certificate))
+        {
+            db.Certificates.Remove(child);
+        }
+
+        await db.SaveChangesAsync();
+
+        await OnChildDeleted.InvokeAsync();
+    }
+
+    protected async IAsyncEnumerable<Certificate> GetCertificates(Certificate certificate)
+    {
+        if (certificate.Children != null)
+        {
+            foreach (var child in certificate.Children)
+            {
+                yield return child;
+
+                if (child.Children != null)
+                {
+                    await foreach (var descendant in GetCertificates(child))
+                    {
+                        yield return descendant;
+                    }
+                }
+            }
         }
     }
 
