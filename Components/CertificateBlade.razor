@@ -94,7 +94,7 @@
             {
                 <li key="@certificate.Id">
                     <a href="#" class="nav-link @(Selected == certificate ? "active" : "text-white")" @onclick="@(() => OnCertificateClick(certificate))">
-                        <i class="bi bi-lock-fill me-2"></i>
+                        <i class="bi @(certificate.Authoritative ? "bi-lock-fill" : "bi-lock") me-2"></i>
                         @certificate.Name
                     </a>
                 </li>
@@ -203,15 +203,15 @@
     public CertificateResponse? Parent { get; set; }
 
     private CertificateResponse? PrevParent { get; set; }
-    
+
     private CertificateResponse? Selected { get; set; }
-    
+
     private List<CertificateResponse>? Certificates;
-    
+
     public record CertificateResponse(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
 
     private bool ShowModal { get; set; }
-    
+
     private bool ShowDeleteModal { get; set; }
 
     public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
@@ -265,7 +265,8 @@
     {
         return await db.Certificates
             .Where(x => x.Pid == id)
-            .OrderBy(x => x.Name)
+            .OrderByDescending(x => x.Authoritative)
+            .ThenBy(x => x.Name.ToLower())
             .Select(x => new CertificateResponse
             (
                 x.Id,
@@ -496,7 +497,7 @@
         StateHasChanged();
         await Task.Yield();
 
-        var certificate = await db.Certificates.Include(x => x.Children).SingleAsync(x => x.Id == Parent.Id);
+        var certificate = await db.Certificates.SingleAsync(x => x.Id == Parent.Id);
         db.Certificates.Remove(certificate);
 
         await foreach (var child in GetCertificateChildren(certificate))
@@ -511,19 +512,15 @@
 
     protected async IAsyncEnumerable<Certificate> GetCertificateChildren(Certificate certificate)
     {
-        if (certificate.Children != null)
-        {
-            foreach (var child in certificate.Children)
-            {
-                yield return child;
+        var children = await db.Certificates.Where(c => c.Pid == certificate.Id).ToListAsync();
 
-                if (child.Children != null)
-                {
-                    await foreach (var descendant in GetCertificateChildren(child))
-                    {
-                        yield return descendant;
-                    }
-                }
+        foreach (var child in children)
+        {
+            yield return child;
+
+            await foreach (var descendant in GetCertificateChildren(child))
+            {
+                yield return descendant;
             }
         }
     }

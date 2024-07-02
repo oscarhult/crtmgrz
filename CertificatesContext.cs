@@ -34,7 +34,7 @@ public class Certificate
     public required string NotAfter { get; init; }
 
     [ForeignKey(nameof(Pid))]
-    public Certificate Parent { get; init; }
+    public Certificate? Parent { get; init; }
 
-    public List<Certificate> Children { get; set; }
+    public List<Certificate> Children { get; set; } = new();
 }
