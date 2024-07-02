@@ -234,10 +234,8 @@
 
     private async Task OnChildDeletedAsync()
     {
-        Selected = null;
         Certificates = await LoadCertificates(Parent?.Id);
-        // StateHasChanged();
-        await Task.CompletedTask;
+        Selected = null;
     }
 
     private void OnCertificateClick(ListCertificateResponseItem selected)
