@@ -12,6 +12,7 @@
                 }
                 else
                 {
+                    <i class="bi @(Parent.Authoritative ? "bi-lock-fill" : "bi-lock") me-1"></i>
                     <span>@Parent.Name</span>
                 }
             </span>
@@ -105,7 +106,6 @@
     {
         <div class="card mt-3">
             <div class="card-body text-secondary">
-                <p class="card-text">Is Authoritative: @Parent.Authoritative</p>
                 <p class="card-text">Valid From: @Parent.NotBefore</p>
                 <p class="card-text">Valid To: @Parent.NotAfter</p>
             </div>
