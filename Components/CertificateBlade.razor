@@ -232,15 +232,15 @@
         if (PrevParent != Parent)
         {
             PrevParent = Parent;
-            Certificates = await LoadCertificates(Parent?.Id);
             Selected = null;
+            Certificates = await LoadCertificates(Parent?.Id);
         }
     }
 
     private async Task OnChildDeletedAsync()
     {
-        Certificates = await LoadCertificates(Parent?.Id);
         Selected = null;
+        Certificates = await LoadCertificates(Parent?.Id);
     }
 
     private void OnCertificateClick(CertificateResponse selected)
@@ -323,45 +323,6 @@
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.PrivateKeyPem));
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.key", streamRef);
-        }
-    }
-
-    protected async Task DeleteCertificate()
-    {
-        Certificates = null;
-        ShowDeleteModal = false;
-        StateHasChanged();
-        await Task.Yield();
-
-        var certificate = await db.Certificates.Include(x => x.Children).SingleAsync(x => x.Id == Parent.Id);
-        db.Certificates.Remove(certificate);
-
-        await foreach (var child in GetCertificates(certificate))
-        {
-            db.Certificates.Remove(child);
-        }
-
-        await db.SaveChangesAsync();
-
-        await OnChildDeleted.InvokeAsync();
-    }
-
-    protected async IAsyncEnumerable<Certificate> GetCertificates(Certificate certificate)
-    {
-        if (certificate.Children != null)
-        {
-            foreach (var child in certificate.Children)
-            {
-                yield return child;
-
-                if (child.Children != null)
-                {
-                    await foreach (var descendant in GetCertificates(child))
-                    {
-                        yield return descendant;
-                    }
-                }
-            }
         }
     }
 
@@ -520,5 +481,44 @@
 
         Certificates = await LoadCertificates(Parent?.Id);
         NewCertificate = new() { Authoritative = Parent == null };
+    }
+
+    protected async Task DeleteCertificate()
+    {
+        Certificates = null;
+        ShowDeleteModal = false;
+        StateHasChanged();
+        await Task.Yield();
+
+        var certificate = await db.Certificates.Include(x => x.Children).SingleAsync(x => x.Id == Parent.Id);
+        db.Certificates.Remove(certificate);
+
+        await foreach (var child in GetCertificateChildren(certificate))
+        {
+            db.Certificates.Remove(child);
+        }
+
+        await db.SaveChangesAsync();
+
+        await OnChildDeleted.InvokeAsync();
+    }
+
+    protected async IAsyncEnumerable<Certificate> GetCertificateChildren(Certificate certificate)
+    {
+        if (certificate.Children != null)
+        {
+            foreach (var child in certificate.Children)
+            {
+                yield return child;
+
+                if (child.Children != null)
+                {
+                    await foreach (var descendant in GetCertificateChildren(child))
+                    {
+                        yield return descendant;
+                    }
+                }
+            }
+        }
     }
 }
