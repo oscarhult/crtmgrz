@@ -36,31 +36,31 @@
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
                         <i class="bi bi-download me-2"></i>
-                        Download Certificate (.pfx)
+                        Download Certificate (pfx)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
                         <i class="bi bi-download me-2"></i>
-                        Download Certificate (.cer)
+                        Download Certificate (cer)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pem); })">
                         <i class="bi bi-download me-2"></i>
-                        Download Certificate (.pem)
+                        Download Certificate (pem)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Chain); })">
                         <i class="bi bi-download me-2"></i>
-                        Download Chain (.pem)
+                        Download Chain (pem)
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
                         <i class="bi bi-download me-2"></i>
-                        Download Private Key
+                        Download Private Key (pem)
                     </a>
                 </li>
             }
