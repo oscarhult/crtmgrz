@@ -487,6 +487,9 @@
         await db.SaveChangesAsync();
 
         Certificates = await LoadCertificates(Parent?.Id);
+
+        Selected = Certificates.Single(x => x.Id == certificate.Id);
+
         NewCertificate = new() { Authoritative = Parent == null };
     }
 
