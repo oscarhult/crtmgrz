@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
 var dbPath = isDocker && builder.Environment.IsProduction() ? "/app/data/db.sqlite" : "db.sqlite";
 
-builder.Services.AddDbContext<CertificatesContext>(options => options.UseSqlite($"Data Source={dbPath};"));
+builder.Services.AddDbContextFactory<CertificatesContext>(options => options.UseSqlite($"Data Source={dbPath};"));
+builder.Services.AddScoped<CertificatesService>();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();

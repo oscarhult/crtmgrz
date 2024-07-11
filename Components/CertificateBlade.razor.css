@@ -13,4 +13,5 @@ a.nav-link {
 .blade-divider {
     width: 1.5rem;
     height: 100vh;
+    flex-shrink: 0;
 }
