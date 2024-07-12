@@ -21,18 +21,21 @@
             @if (Parent == null || Parent.Authoritative)
             {
                 <li>
-                    <a class="dropdown-item text-success" href="#" @onclick="@(() => { ShowModal = true; })">
+                    <a class="dropdown-item text-success" href="#" @onclick="@(() => { ShowCreateModal = true; })">
                         <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
                     </a>
                 </li>
             }
-            @if (Parent != null && Parent.Authoritative)
-            {
-                <li><hr class="dropdown-divider"></li>
-            }
             @if (Parent != null)
             {
+                <li>
+                    <a class="dropdown-item text-primary" href="#" @onclick="CertificateDetailsClick">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Certificate Details
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
                 <li>
                     <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
                         <i class="bi bi-download me-2"></i>
@@ -110,7 +113,7 @@
     }
 </div>
 
-@if (ShowModal)
+@if (ShowCreateModal)
 {
     <div class="modal show" tabindex="-1" style="display:block;">
         <div class="modal-dialog modal-dialog-centered">
@@ -120,7 +123,7 @@
                         <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowModal = false; })"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowCreateModal = false; })"></button>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -148,6 +151,45 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" @onclick="CreateCertificate">Create Certificate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (ShowDetailsModal)
+{
+    <div class="modal show" tabindex="-1" style="display:block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-bg-primary">
+                    <h5 class="modal-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Certificate Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowDetailsModal = false; })"></button>
+                </div>
+                <div class="modal-body">
+                    @if (CertificateDetails == null)
+                    {
+                        <p>
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading...
+                        </p>
+                    }
+                    else
+                    {
+                        <p>
+                            <pre>
+                                <code>
+                                    @CertificateDetails
+                                </code>
+                            </pre>
+                        </p>
+                    }
                 </div>
             </div>
         </div>
@@ -205,11 +247,13 @@
 
     private List<CertificateResponse>? Certificates;
 
-    private bool ShowModal { get; set; }
+    private CertificateModel NewCertificate { get; set; } = new CertificateModel();
 
+    private bool ShowCreateModal { get; set; }
+    private bool ShowDetailsModal { get; set; }
     private bool ShowDeleteModal { get; set; }
 
-    private CertificateModel NewCertificate { get; set; } = new CertificateModel();
+    private string? CertificateDetails { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -245,6 +289,14 @@
         }
     }
 
+    private async Task CertificateDetailsClick()
+    {
+        CertificateDetails = null;
+        ShowDetailsModal = true;
+
+        CertificateDetails = await svc.CertificateDetails(Parent!.Id);
+    }
+
     protected async Task DownloadCertificate(ExportFormat format)
     {
         await svc.DownloadCertificate(js, Parent!.Id, format);
@@ -253,8 +305,8 @@
     protected async Task CreateCertificate()
     {
         Certificates = null;
-        ShowModal = false;
-        StateHasChanged();
+        ShowCreateModal = false;
+        await InvokeAsync(StateHasChanged);
         await Task.Yield();
 
         var id = await svc.CreateCertificate(NewCertificate, Parent?.Id);
@@ -267,7 +319,7 @@
     {
         Certificates = null;
         ShowDeleteModal = false;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await Task.Yield();
 
         await svc.DeleteCertificate(Parent!.Id);

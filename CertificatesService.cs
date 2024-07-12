@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Xml.Linq;
 
 namespace crtmgrz;
 
@@ -47,6 +48,24 @@ public class CertificatesService
                 x.NotAfter
             ))
             .ToListAsync();
+    }
+
+    public async Task<string> CertificateDetails(Guid id)
+    {
+        using var db = await fac.CreateDbContextAsync();
+
+        var certificate = await db.Certificates.SingleAsync(x => x.Id == id);
+
+        using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
+
+        var certificateDetails = cert.ToString().Trim();
+
+        foreach (var ext in cert.Extensions)
+        {
+            certificateDetails += $"\n\n[{ext!.Oid!.FriendlyName}]\n  {ext.Format(false).Trim()}";
+        }
+
+        return certificateDetails;
     }
 
     public async Task DownloadCertificate(IJSRuntime js, Guid id, ExportFormat format)
@@ -275,7 +294,7 @@ public class CertificatesService
         await db.SaveChangesAsync();
     }
 
-    public async IAsyncEnumerable<Certificate> GetCertificateChildren(CertificatesContext db, Certificate certificate)
+    private async IAsyncEnumerable<Certificate> GetCertificateChildren(CertificatesContext db, Certificate certificate)
     {
         var children = await db.Certificates.Where(c => c.Pid == certificate.Id).ToListAsync();
 
