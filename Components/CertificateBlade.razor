@@ -30,7 +30,7 @@
             @if (Parent != null)
             {
                 <li>
-                    <a class="dropdown-item text-primary" href="#" @onclick="CertificateDetailsClick">
+                    <a class="dropdown-item text-primary" href="#" @onclick="ShowCertificateDetails">
                         <i class="bi bi-info-circle me-2"></i>
                         Certificate Details
                     </a>
@@ -182,13 +182,9 @@
                     }
                     else
                     {
-                        <p>
-                            <pre>
-                                <code>
-                                    @CertificateDetails
-                                </code>
-                            </pre>
-                        </p>
+                        <textarea class="certificate-details">
+                            @CertificateDetails
+                        </textarea>
                     }
                 </div>
             </div>
@@ -271,13 +267,13 @@
         }
     }
 
-    private async Task OnChildDeletedAsync()
+    protected async Task OnChildDeletedAsync()
     {
         Selected = null;
         Certificates = await svc.LoadCertificates(Parent?.Id);
     }
 
-    private void OnCertificateClick(CertificateResponse selected)
+    protected void OnCertificateClick(CertificateResponse selected)
     {
         if (Selected == selected)
         {
@@ -289,17 +285,19 @@
         }
     }
 
-    private async Task CertificateDetailsClick()
-    {
-        CertificateDetails = null;
-        ShowDetailsModal = true;
-
-        CertificateDetails = await svc.CertificateDetails(Parent!.Id);
-    }
-
     protected async Task DownloadCertificate(ExportFormat format)
     {
         await svc.DownloadCertificate(js, Parent!.Id, format);
+    }
+
+    protected async Task ShowCertificateDetails()
+    {
+        CertificateDetails = null;
+        ShowDetailsModal = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
+        CertificateDetails = await svc.CertificateDetails(Parent!.Id);
     }
 
     protected async Task CreateCertificate()

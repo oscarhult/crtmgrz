@@ -4,7 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Xml.Linq;
+using System.Text.RegularExpressions;
 
 namespace crtmgrz;
 
@@ -58,14 +58,39 @@ public class CertificatesService
 
         using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
 
-        var certificateDetails = cert.ToString().Trim();
+        var sb = new StringBuilder();
 
-        foreach (var ext in cert.Extensions)
+        sb.AppendLine("[Subject]");
+        sb.AppendLine(Regex.Replace(cert.SubjectName.Format(false), "[\\s]+", " ").Trim());
+
+        sb.AppendLine();
+        sb.AppendLine("[Issuer]");
+        sb.AppendLine(Regex.Replace(cert.IssuerName.Format(false), "[\\s]+", " ").Trim());
+
+        sb.AppendLine();
+        sb.AppendLine("[SerialNumber]");
+        sb.AppendLine(Regex.Replace(cert.SerialNumber, "[\\s]+", " ").Trim());
+
+        sb.AppendLine();
+        sb.AppendLine("[NotBefore]");
+        sb.AppendLine(Regex.Replace(cert.NotBefore.ToString("o"), "[\\s]+", " ").Trim());
+
+        sb.AppendLine();
+        sb.AppendLine("[NotAfter]");
+        sb.AppendLine(Regex.Replace(cert.NotAfter.ToString("o"), "[\\s]+", " ").Trim());
+
+        sb.AppendLine();
+        sb.AppendLine("[Thumbprint]");
+        sb.AppendLine(Regex.Replace(cert.Thumbprint, "[\\s]+", " ").Trim());
+
+        foreach (var ext in cert.Extensions.OrderBy(x => x.Oid!.FriendlyName))
         {
-            certificateDetails += $"\n\n[{ext!.Oid!.FriendlyName}]\n  {ext.Format(false).Trim()}";
+            sb.AppendLine();
+            sb.AppendLine($"[{ext.Oid!.FriendlyName}]");
+            sb.AppendLine(Regex.Replace(ext.Format(false), "[\\s]+", " ").Trim());
         }
 
-        return certificateDetails;
+        return sb.ToString();
     }
 
     public async Task DownloadCertificate(IJSRuntime js, Guid id, ExportFormat format)
