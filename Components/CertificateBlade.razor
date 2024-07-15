@@ -1,4 +1,5 @@
-﻿@inject CertificatesService svc
+﻿@using System.Text.Json
+@inject CertificatesService svc
 @inject IJSRuntime js
 
 <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="min-width: 280px;">
@@ -24,6 +25,23 @@
                     <a class="dropdown-item text-success" href="#" @onclick="@(() => { ShowCreateModal = true; })">
                         <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
+                    </a>
+                </li>
+            }
+            @if (Parent == null)
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <InputFile id="importCertificates" OnChange="ImportCertificates" hidden />
+                    <a class="dropdown-item text-info" href="#" onclick="document.getElementById('importCertificates').click()">
+                        <i class="bi bi-database-add me-2"></i>
+                        Import Database (json)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item text-info" href="#" @onclick="ExportCertificates">
+                        <i class="bi bi-database-down me-2"></i>
+                        Export Database (json)
                     </a>
                 </li>
             }
@@ -184,7 +202,7 @@
                     {
                         <textarea class="certificate-details">
                             @CertificateDetails
-                        </textarea>
+                                </textarea>
                     }
                 </div>
             </div>
@@ -322,5 +340,24 @@
 
         await svc.DeleteCertificate(Parent!.Id);
         await OnChildDeleted.InvokeAsync();
+    }
+
+    protected async Task ExportCertificates()
+    {
+        await svc.ExportCertificates(js);
+    }
+
+    protected async Task ImportCertificates(InputFileChangeEventArgs e)
+    {
+        Selected = null;
+        Certificates = null;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
+        using var stream = e.File.OpenReadStream();
+        var certificates = await JsonSerializer.DeserializeAsync<List<Certificate>>(stream);
+        await svc.ImportCertificates(certificates!);
+        
+        Certificates = await svc.LoadCertificates(null);
     }
 }

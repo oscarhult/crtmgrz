@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace crtmgrz;
 
@@ -33,6 +34,7 @@ public class Certificate
     public required string NotBefore { get; init; }
     public required string NotAfter { get; init; }
 
+    [JsonIgnore]
     [ForeignKey(nameof(Pid))]
     public Certificate? Parent { get; init; }
 

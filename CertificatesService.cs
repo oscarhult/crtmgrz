@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace crtmgrz;
@@ -332,5 +333,22 @@ public class CertificatesService
                 yield return descendant;
             }
         }
+    }
+
+    public async Task ExportCertificates(IJSRuntime js)
+    {
+        using var db = await fac.CreateDbContextAsync();
+        var certificates = await db.Certificates.ToListAsync();
+        var json = JsonSerializer.SerializeToUtf8Bytes(certificates.Where(x => x.Pid == null), new JsonSerializerOptions { WriteIndented = true });
+        using var stream = new MemoryStream(json);
+        using var streamRef = new DotNetStreamReference(stream);
+        await js.InvokeVoidAsync("downloadFileFromStream", $"crtmgrz.json", streamRef);
+    }
+
+    public async Task ImportCertificates(List<Certificate> certificates)
+    {
+        using var db = await fac.CreateDbContextAsync();
+        await db.Certificates.AddRangeAsync(certificates);
+        await db.SaveChangesAsync();
     }
 }
