@@ -15,9 +15,3 @@ div.blade-divider {
     height: 100vh;
     flex-shrink: 0;
 }
-
-span.certificate-details {
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-family: monospace;
-}

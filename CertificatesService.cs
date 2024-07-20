@@ -51,7 +51,7 @@ public class CertificatesService
             .ToListAsync();
     }
 
-    public async Task<string> CertificateDetails(Guid id)
+    public async Task<Dictionary<string, string>> CertificateDetails(Guid id)
     {
         using var db = await fac.CreateDbContextAsync();
 
@@ -59,39 +59,22 @@ public class CertificatesService
 
         using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
 
-        var sb = new StringBuilder();
-
-        sb.AppendLine("[Subject]");
-        sb.AppendLine(Regex.Replace(cert.SubjectName.Format(false), "[\\s]+", " ").Trim());
-
-        sb.AppendLine();
-        sb.AppendLine("[Issuer]");
-        sb.AppendLine(Regex.Replace(cert.IssuerName.Format(false), "[\\s]+", " ").Trim());
-
-        sb.AppendLine();
-        sb.AppendLine("[SerialNumber]");
-        sb.AppendLine(Regex.Replace(cert.SerialNumber, "[\\s]+", " ").Trim());
-
-        sb.AppendLine();
-        sb.AppendLine("[NotBefore]");
-        sb.AppendLine(Regex.Replace(cert.NotBefore.ToString("o"), "[\\s]+", " ").Trim());
-
-        sb.AppendLine();
-        sb.AppendLine("[NotAfter]");
-        sb.AppendLine(Regex.Replace(cert.NotAfter.ToString("o"), "[\\s]+", " ").Trim());
-
-        sb.AppendLine();
-        sb.AppendLine("[Thumbprint]");
-        sb.AppendLine(Regex.Replace(cert.Thumbprint, "[\\s]+", " ").Trim());
+        var details = new Dictionary<string, string>
+        {
+            ["Subject"] = Regex.Replace(cert.SubjectName.Format(false), "[\\s]+", " ").Trim(),
+            ["Issuer"] = Regex.Replace(cert.IssuerName.Format(false), "[\\s]+", " ").Trim(),
+            ["SerialNumber"] = Regex.Replace(cert.SerialNumber, "[\\s]+", " ").Trim(),
+            ["NotBefore"] = Regex.Replace(cert.NotBefore.ToString("o"), "[\\s]+", " ").Trim(),
+            ["NotAfter"] = Regex.Replace(cert.NotAfter.ToString("o"), "[\\s]+", " ").Trim(),
+            ["Thumbprint"] = Regex.Replace(cert.Thumbprint, "[\\s]+", " ").Trim(),
+        };
 
         foreach (var ext in cert.Extensions.OrderBy(x => x.Oid!.FriendlyName))
         {
-            sb.AppendLine();
-            sb.AppendLine($"[{ext.Oid!.FriendlyName}]");
-            sb.AppendLine(Regex.Replace(ext.Format(false), "[\\s]+", " ").Trim());
+            details[ext.Oid!.FriendlyName!] = Regex.Replace(ext.Format(false), "[\\s]+", " ").Trim();
         }
 
-        return sb.ToString();
+        return details;
     }
 
     public async Task DownloadCertificate(IJSRuntime js, Guid id, ExportFormat format)

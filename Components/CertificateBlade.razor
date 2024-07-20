@@ -188,19 +188,29 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(() => { ShowDetailsModal = false; })"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-1">
                     @if (CertificateDetails == null)
                     {
-                        <p>
+                        <div class="p-3">
                             <div class="spinner-border spinner-border-sm me-2" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                             Loading...
-                        </p>
+                        </div>
                     }
                     else
                     {
-                        <span class="certificate-details">@CertificateDetails</span>
+                        <ol class="list-group list-group-flush">
+                        @foreach (var kvp in CertificateDetails)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="text-break">
+                                    <div class="fw-bold">@kvp.Key</div>
+                                    @kvp.Value
+                                </div>
+                            </li>
+                        }
+                        </ol>
                     }
                 </div>
             </div>
@@ -265,7 +275,7 @@
     private bool ShowDetailsModal { get; set; }
     private bool ShowDeleteModal { get; set; }
 
-    private string? CertificateDetails { get; set; }
+    private Dictionary<string, string>? CertificateDetails { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
