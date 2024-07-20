@@ -18,5 +18,6 @@ div.blade-divider {
 
 span.certificate-details {
     white-space: pre-wrap;
+    word-break: break-all;
     font-family: monospace;
 }
