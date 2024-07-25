@@ -9,7 +9,13 @@ var dbPath = isDocker && builder.Environment.IsProduction() ? "/app/data/db.sqli
 
 builder.Services.AddDbContextFactory<CertificatesContext>(options => options.UseSqlite($"Data Source={dbPath};"));
 builder.Services.AddSingleton<CertificatesService>();
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+builder.Services
+    .AddRazorComponents()
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(15);
+    });
 
 var app = builder.Build();
 
@@ -19,13 +25,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+app.UseStatusCodePagesWithRedirects("/Error");
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();

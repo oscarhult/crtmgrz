@@ -4,7 +4,7 @@
 
 <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="min-width: 280px;">
     <div class="dropdown">
-        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <a href="" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <span class="fs-5">
                 @if (Parent == null)
                 {
@@ -22,7 +22,7 @@
             @if (Parent == null || Parent.Authoritative)
             {
                 <li>
-                    <a class="dropdown-item text-success" href="#" @onclick="@(() => { ShowCreateModal = true; })">
+                    <a href="" class="dropdown-item text-success" @onclick="@(() => { ShowCreateModal = true; })">
                         <i class="bi bi-plus-circle me-2"></i>
                         Create Certificate
                     </a>
@@ -33,13 +33,13 @@
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <InputFile id="importCertificates" OnChange="ImportCertificates" hidden />
-                    <a class="dropdown-item text-info" href="#" onclick="document.getElementById('importCertificates').click()">
+                    <a href="" class="dropdown-item text-info" onclick="document.getElementById('importCertificates').click()">
                         <i class="bi bi-database-add me-2"></i>
                         Import Database (json)
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item text-info" href="#" @onclick="ExportCertificates">
+                    <a href="" class="dropdown-item text-info" @onclick="ExportCertificates">
                         <i class="bi bi-database-down me-2"></i>
                         Export Database (json)
                     </a>
@@ -48,45 +48,45 @@
             @if (Parent != null)
             {
                 <li>
-                    <a class="dropdown-item text-primary" href="#" @onclick="ShowCertificateDetails">
+                    <a href="" class="dropdown-item text-primary" @onclick="ShowCertificateDetails">
                         <i class="bi bi-info-circle me-2"></i>
                         Certificate Details
                     </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
+                    <a href="" class="dropdown-item" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pfx); })">
                         <i class="bi bi-download me-2"></i>
                         Download Certificate (pfx)
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
+                    <a href="" class="dropdown-item" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Cer); })">
                         <i class="bi bi-download me-2"></i>
                         Download Certificate (cer)
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pem); })">
+                    <a href="" class="dropdown-item" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Pem); })">
                         <i class="bi bi-download me-2"></i>
                         Download Certificate (pem)
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Chain); })">
+                    <a href="" class="dropdown-item" @onclick="@(async () => { await DownloadCertificate(ExportFormat.Chain); })">
                         <i class="bi bi-download me-2"></i>
                         Download Chain (pem)
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
+                    <a href="" class="dropdown-item" @onclick="@(async () => { await DownloadCertificate(ExportFormat.PrivateKey); })">
                         <i class="bi bi-download me-2"></i>
                         Download Private Key (pem)
                     </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item text-danger" href="#" @onclick="@(() => { ShowDeleteModal = true; })">
+                    <a href="" class="dropdown-item text-danger" @onclick="@(() => { ShowDeleteModal = true; })">
                         <i class="bi bi-trash me-2"></i>
                         Delete Certificate
                     </a>
@@ -112,7 +112,7 @@
             @foreach (var certificate in Certificates)
             {
                 <li key="@certificate.Id">
-                    <a href="#" class="nav-link @(Selected == certificate ? "active" : "text-white")" @onclick="@(() => OnCertificateClick(certificate))">
+                    <a href="" class="nav-link @(Selected == certificate ? "active" : "text-white")" @onclick="@(() => OnCertificateClick(certificate))">
                         <i class="bi @(certificate.Authoritative ? "bi-lock-fill" : "bi-lock") me-2"></i>
                         @certificate.Name
                     </a>
