@@ -8,10 +8,38 @@
     <link rel="stylesheet" href="bootstrap.min.css" />
     <link rel="stylesheet" href="bootstrap-icons.min.css" />
     <link rel="stylesheet" href="crtmgrz.styles.css" />
+    <link rel="stylesheet" href="app.css" />
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 </head>
 
 <body data-bs-theme="dark">
+    <div id="components-reconnect-modal">
+        <div class="modal show" tabindex="-1" style="display:block;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header text-bg-warning">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Disconnected
+                        </h5>
+                    </div>
+                    <div class="modal-body reconnect-show">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Reconnecting...</span>
+                        </div>
+                        Reconnecting...
+                    </div>
+                    <div class="modal-body reconnect-failed">
+                        Connection failed...
+                    </div>
+                    <div class="modal-body reconnect-rejected">
+                        Connection rejected...
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    </div>
     <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
     <script src="bootstrap.bundle.min.js"></script>

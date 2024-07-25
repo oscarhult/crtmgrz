@@ -280,6 +280,7 @@
     protected override async Task OnInitializedAsync()
     {
         NewCertificate.Authoritative = Parent == null;
+        Certificates = null;
         Certificates = await svc.LoadCertificates(Parent?.Id);
     }
 
@@ -289,6 +290,7 @@
         {
             PrevParent = Parent;
             Selected = null;
+            Certificates = null;
             Certificates = await svc.LoadCertificates(Parent?.Id);
         }
     }
@@ -296,6 +298,7 @@
     protected async Task OnChildDeletedAsync()
     {
         Selected = null;
+        Certificates = null;
         Certificates = await svc.LoadCertificates(Parent?.Id);
     }
 
@@ -341,6 +344,7 @@
 
     protected async Task DeleteCertificate()
     {
+        Selected = null;
         Certificates = null;
         ShowDeleteModal = false;
         await InvokeAsync(StateHasChanged);
