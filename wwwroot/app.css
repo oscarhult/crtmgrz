@@ -27,6 +27,10 @@
   font-variation-settings: "slnt" 0;
 }
 
+.nav-pills {
+  --bs-nav-pills-link-active-bg: #cc8800;
+}
+
 main {
   min-height: 100vh;
   overflow-x: auto;
