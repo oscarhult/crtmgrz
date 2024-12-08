@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 COPY . /src
 RUN dotnet publish \
   /src \
@@ -10,7 +10,7 @@ RUN dotnet publish \
   -p:DebugSymbols=false \
   -p:DebugType=None
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
 EXPOSE 8080
 RUN apk add --no-cache tzdata
 USER app
