@@ -2,7 +2,7 @@
 @inject CertificatesService svc
 @inject IJSRuntime js
 
-<div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="min-width: 280px;">
+<div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary certificate-blade">
     <div class="dropdown">
         <a href="" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <span class="fs-5">
@@ -115,20 +115,12 @@
                     <a href="" class="nav-link @(Selected == certificate ? "active" : "text-white")" @onclick="@(() => OnCertificateClick(certificate))">
                         <i class="bi @(certificate.Authoritative ? "bi-lock-fill" : "bi-lock") me-2"></i>
                         @certificate.Name
+                        <span class="badge @(certificate.Days < 30 ? "text-bg-danger" : certificate.Days < 90 ? "text-bg-warning" : "text-bg-success")" style="float:right;font-size: 9px;line-height: 15px;">@certificate.Days days</span>
                     </a>
                 </li>
             }
         }
     </ul>
-    @if (Parent != null)
-    {
-        <div class="card mt-3">
-            <div class="card-body text-secondary">
-                <p class="card-text">Valid From: @Parent.NotBefore</p>
-                <p class="card-text">Valid To: @Parent.NotAfter</p>
-            </div>
-        </div>
-    }
 </div>
 
 @if (ShowCreateModal)

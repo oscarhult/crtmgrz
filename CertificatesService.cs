@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -9,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace crtmgrz;
 
-public record CertificateResponse(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter);
+public record CertificateResponse(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter, double Days);
 
 public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
 
@@ -46,7 +47,8 @@ public class CertificatesService
                 x.Name,
                 x.Authoritative,
                 x.NotBefore,
-                x.NotAfter
+                x.NotAfter,
+                (DateTime.ParseExact(x.NotAfter, "yyyy-MM-dd", CultureInfo.InvariantCulture) - DateTime.Today).TotalDays
             ))
             .ToListAsync();
     }
