@@ -28,26 +28,13 @@
   font-variation-settings: "slnt" 0;
 }
 
-.certificate-blade::-webkit-scrollbar {
-  width: 1rem;
-  height: 1rem;
-  -webkit-transition: background .3s;
-  transition: background .3s;
-}
-.certificate-blade::-webkit-scrollbar-corner, ::-webkit-scrollbar-track {
-  background: 0 0;
-}
-.certificate-blade::-webkit-scrollbar-thumb {
-  border-radius: 1rem;
-  border: 5px solid transparent;
-  box-shadow: inset 0 0 0 1rem rgba(255, 255, 255, .25);
-}
-
 .nav-pills {
-  --bs-nav-pills-link-active-bg: #cc8800;
+  --bs-nav-pills-link-active-bg: rgba(255, 255, 255, 0.15);
 }
 
-html, body, main {
+html,
+body,
+main {
   height: 100vh;
   overflow-x: auto;
   overflow-y: hidden;
@@ -57,6 +44,24 @@ html, body, main {
   min-width: 280px;
   height: 100vh;
   overflow: auto;
+}
+
+.certificate-blade::-webkit-scrollbar {
+  width: 1rem;
+  height: 1rem;
+  -webkit-transition: background 0.3s;
+  transition: background 0.3s;
+}
+
+.certificate-blade::-webkit-scrollbar-corner,
+.certificate-blade::-webkit-scrollbar-track {
+  background: 0 0;
+}
+
+.certificate-blade::-webkit-scrollbar-thumb {
+  border-radius: 1rem;
+  border: 5px solid transparent;
+  box-shadow: inset 0 0 0 1rem rgba(255, 255, 255, 0.25);
 }
 
 a {
