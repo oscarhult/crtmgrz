@@ -11,14 +11,14 @@ using crtmgrz;
 namespace crtmgrz.Migrations
 {
     [DbContext(typeof(CertificatesContext))]
-    [Migration("20250117141738_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240630130436_InitCertificatesContext")]
+    partial class InitCertificatesContext
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.6");
 
             modelBuilder.Entity("crtmgrz.Certificate", b =>
                 {
