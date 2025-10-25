@@ -1,18 +1,34 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace crtmgrz;
 
-public record CertificateResponse(Guid Id, Guid? Pid, string Name, bool Authoritative, string NotBefore, string NotAfter, double Days);
+public record CertificateResponse(
+    Guid Id,
+    Guid? Pid,
+    string Name,
+    bool Authoritative,
+    string NotBefore,
+    string NotAfter,
+    double Days
+);
 
-public enum ExportFormat { None, Pfx, Cer, Pem, Chain, PrivateKey }
+public enum ExportFormat
+{
+    None,
+    Pfx,
+    Cer,
+    Pem,
+    Chain,
+    PrivateKey,
+}
 
 public class CertificateModel
 {
@@ -36,19 +52,21 @@ public class CertificatesService
     {
         using var db = await fac.CreateDbContextAsync();
 
-        return await db.Certificates
-            .Where(x => x.Pid == id)
+        return await db
+            .Certificates.Where(x => x.Pid == id)
             .OrderByDescending(x => x.Authoritative)
             .ThenBy(x => x.Name.ToLower())
-            .Select(x => new CertificateResponse
-            (
+            .Select(x => new CertificateResponse(
                 x.Id,
                 x.Pid,
                 x.Name,
                 x.Authoritative,
                 x.NotBefore,
                 x.NotAfter,
-                (DateTime.ParseExact(x.NotAfter, "yyyy-MM-dd", CultureInfo.InvariantCulture) - DateTime.Today).TotalDays
+                (
+                    DateTime.ParseExact(x.NotAfter, "yyyy-MM-dd", CultureInfo.InvariantCulture)
+                    - DateTime.Today
+                ).TotalDays
             ))
             .ToListAsync();
     }
@@ -73,7 +91,9 @@ public class CertificatesService
 
         foreach (var ext in cert.Extensions.OrderBy(x => x.Oid!.FriendlyName))
         {
-            details[ext.Oid!.FriendlyName!] = Regex.Replace(ext.Format(false), "[\\s]+", " ").Trim();
+            details[ext.Oid!.FriendlyName!] = Regex
+                .Replace(ext.Format(false), "[\\s]+", " ")
+                .Trim();
         }
 
         return details;
@@ -93,20 +113,32 @@ public class CertificatesService
             using var certWithKey = cert.CopyWithPrivateKey(key);
             using var stream = new MemoryStream(certWithKey.Export(X509ContentType.Pfx));
             using var streamRef = new DotNetStreamReference(stream);
-            await js.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.pfx", streamRef);
+            await js.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"{certificate.Name}.pfx",
+                streamRef
+            );
         }
         else if (format == ExportFormat.Cer)
         {
             using var cert = X509Certificate2.CreateFromPem(certificate.CertificatePem);
             using var stream = new MemoryStream(cert.Export(X509ContentType.Cert));
             using var streamRef = new DotNetStreamReference(stream);
-            await js.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.cer", streamRef);
+            await js.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"{certificate.Name}.cer",
+                streamRef
+            );
         }
         else if (format == ExportFormat.Pem)
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.CertificatePem));
             using var streamRef = new DotNetStreamReference(stream);
-            await js.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.pem", streamRef);
+            await js.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"{certificate.Name}.pem",
+                streamRef
+            );
         }
         else if (format == ExportFormat.Chain)
         {
@@ -123,15 +155,25 @@ public class CertificatesService
                 }
             }
 
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(string.Join('\n', chain.Select(x => x.CertificatePem))));
+            using var stream = new MemoryStream(
+                Encoding.UTF8.GetBytes(string.Join('\n', chain.Select(x => x.CertificatePem)))
+            );
             using var streamRef = new DotNetStreamReference(stream);
-            await js.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.chain", streamRef);
+            await js.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"{certificate.Name}.chain",
+                streamRef
+            );
         }
         else if (format == ExportFormat.PrivateKey)
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(certificate.PrivateKeyPem));
             using var streamRef = new DotNetStreamReference(stream);
-            await js.InvokeVoidAsync("downloadFileFromStream", $"{certificate.Name}.key", streamRef);
+            await js.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"{certificate.Name}.key",
+                streamRef
+            );
         }
     }
 
@@ -143,8 +185,7 @@ public class CertificatesService
 
         var now = DateTimeOffset.UtcNow;
 
-        var notBefore = now
-            .AddDays(-(now.Day - 1))
+        var notBefore = now.AddDays(-(now.Day - 1))
             .AddHours(-now.Hour)
             .AddMinutes(-now.Minute)
             .AddSeconds(-now.Second);
@@ -305,7 +346,10 @@ public class CertificatesService
         await db.SaveChangesAsync();
     }
 
-    private async IAsyncEnumerable<Certificate> GetCertificateChildren(CertificatesContext db, Certificate certificate)
+    private async IAsyncEnumerable<Certificate> GetCertificateChildren(
+        CertificatesContext db,
+        Certificate certificate
+    )
     {
         var children = await db.Certificates.Where(c => c.Pid == certificate.Id).ToListAsync();
 
@@ -324,7 +368,10 @@ public class CertificatesService
     {
         using var db = await fac.CreateDbContextAsync();
         var certificates = await db.Certificates.ToListAsync();
-        var json = JsonSerializer.SerializeToUtf8Bytes(certificates.Where(x => x.Pid == null), new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.SerializeToUtf8Bytes(
+            certificates.Where(x => x.Pid == null),
+            new JsonSerializerOptions { WriteIndented = true }
+        );
         using var stream = new MemoryStream(json);
         using var streamRef = new DotNetStreamReference(stream);
         await js.InvokeVoidAsync("downloadFileFromStream", $"crtmgrz.json", streamRef);
