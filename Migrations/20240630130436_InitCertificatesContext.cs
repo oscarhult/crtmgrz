@@ -22,7 +22,7 @@ namespace crtmgrz.Migrations
                     PrivateKeyPem = table.Column<string>(type: "TEXT", nullable: false),
                     CertificatePem = table.Column<string>(type: "TEXT", nullable: false),
                     NotBefore = table.Column<string>(type: "TEXT", nullable: false),
-                    NotAfter = table.Column<string>(type: "TEXT", nullable: false)
+                    NotAfter = table.Column<string>(type: "TEXT", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -31,20 +31,22 @@ namespace crtmgrz.Migrations
                         name: "FK_Certificates_Certificates_Pid",
                         column: x => x.Pid,
                         principalTable: "Certificates",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Certificates_Pid",
                 table: "Certificates",
-                column: "Pid");
+                column: "Pid"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Certificates");
+            migrationBuilder.DropTable(name: "Certificates");
         }
     }
 }
